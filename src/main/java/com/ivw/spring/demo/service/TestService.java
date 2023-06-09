@@ -5,10 +5,7 @@ import com.ivw.spring.demo.config.PostgresConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,18 +13,24 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TestService {
 
     @Autowired
-    PostgresConfig postgresConfig;
+    private PostgresConfig postgresConfig;
 
     private final Map<String, Connection> CONNECTION_MAP = new ConcurrentHashMap<>();
+
+
     public void getAll() throws SQLException {
-        Connection connection = CONNECTION_MAP.computeIfAbsent("123", key -> postgresConfig.getConnection());
-        Statement statement = connection.createStatement();
-        ResultSet resultSet = statement.executeQuery(QueryConstants.GET_ALL_FROM_CONFIG);
-        while ( resultSet.next() ) {
-            System.out.println("Schedule Name : " + resultSet.getString("name"));
+        Connection connection = CONNECTION_MAP.computeIfAbsent("123", key -> {
+            try {
+                return postgresConfig.getConnection();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        PreparedStatement getAllFromConfig = connection.prepareStatement(QueryConstants.GET_ALL_FROM_CONFIG);
+        ResultSet resultSet = getAllFromConfig.executeQuery();
+        while (resultSet.next()) {
+            System.out.println("name : " + resultSet.getString("name"));
         }
-        resultSet.close();
-        statement.close();
         connection.close();
     }
 }

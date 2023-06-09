@@ -1,39 +1,27 @@
 package com.ivw.spring.demo.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.util.Objects;
 
 @Component
 public class PostgresConfig {
-    @Value("${spring.datasource.driver-class-name}")
-    private String url;
 
-    @Value("${spring.datasource.username}")
-    private String username;
+    @Autowired
+    private DataSource dataSource;
 
-    @Value("${spring.datasource.password}")
-    private String password;
 
-    @Value("${spring.datasource.driver-class-name}")
-    private String driverClassName;
-
-    private JdbcTemplate jdbcTemplate;
-
-    public Connection getConnection() {
-        Connection c = null;
-        try {
-            Class.forName("org.postgresql.Driver");
-            c = DriverManager.getConnection(url, username, password);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-            System.exit(0);
-        }
-        System.out.println("Opened database successfully");
-        return c;
+    public Connection getConnection() throws SQLException {
+        JdbcTemplate jdbcTemplate1 = new JdbcTemplate(dataSource);
+        return Objects.requireNonNull(jdbcTemplate1.getDataSource()).getConnection();
     }
 }
